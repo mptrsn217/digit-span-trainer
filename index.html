@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14161a">
+<title>Number Memory</title>
+<style>
+:root{--bg:#14161a;--card:#1e2128;--line:#2c313b;--fg:#e8eaed;--dim:#8b93a1;--acc:#e0a84a;--ok:#4fbf7a;--bad:#e2605a}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{max-width:560px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:20px;margin:4px 0 16px;letter-spacing:.02em}
+h2{font-size:13px;margin:22px 0 8px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+button{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer}
+button:active{transform:scale(.98)}
+button.pri{background:var(--acc);color:#1a1405;border-color:var(--acc);font-weight:600}
+input,textarea{font:inherit;color:var(--fg);background:#101216;border:1px solid var(--line);border-radius:8px;padding:10px;width:100%}
+input:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:-1px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mode{display:block;width:100%;text-align:left;margin-bottom:10px;padding:14px}
+.mode b{display:block;font-size:17px}
+.mode span{color:var(--dim);font-size:13px}
+.bar{display:flex;height:6px;background:var(--line);border-radius:3px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%}
+.row{display:flex;gap:8px;align-items:center}
+.seg{display:flex;gap:6px;margin-bottom:8px}
+.seg button{flex:1;padding:8px 4px;font-size:13px}
+.seg button.on{border-color:var(--acc);color:var(--acc)}
+.prompt{font-size:64px;font-weight:700;text-align:center;margin:18px 0 4px;letter-spacing:.06em;font-variant-numeric:tabular-nums;word-break:break-word}
+.prompt.word{font-size:38px;letter-spacing:0}
+.ask{text-align:center;color:var(--dim);margin-bottom:14px;font-size:14px}
+#ans{font-size:28px;text-align:center;padding:14px;letter-spacing:.08em}
+#ans.ok{border-color:var(--ok)}
+#ans.bad{border-color:var(--bad)}
+.fb{min-height:44px;text-align:center;margin-top:10px;font-size:15px;color:var(--dim)}
+.fb b{color:var(--ok);font-size:26px}
+.stats{display:flex;justify-content:space-around;color:var(--dim);font-size:13px;margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.stats b{display:block;color:var(--fg);font-size:18px;text-align:center}
+.lgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.lgrid label{display:block;font-size:12px;color:var(--dim)}
+.lgrid input{text-align:center;font-size:18px;padding:8px 2px}
+.wgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 10px}
+.wgrid div{display:flex;align-items:center;gap:6px}
+.wgrid span{width:26px;color:var(--dim);font-variant-numeric:tabular-nums}
+.wgrid input{padding:7px 8px}
+.note{color:var(--dim);font-size:13px;margin:6px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13px}
+.chips em{color:var(--bad);font-style:normal;margin-left:6px}
+.chips small{color:var(--dim);margin-left:4px}
+.map{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+.map i{display:flex;align-items:center;justify-content:center;aspect-ratio:1;border-radius:4px;font-style:normal;font-size:11px;font-variant-numeric:tabular-nums;background:var(--line);color:var(--dim);cursor:pointer}
+.map i.seen{color:#111}
+.map.one i{font-size:16px}
+.legend{display:flex;gap:10px;font-size:12px;color:var(--dim);margin-top:6px;align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+#det{min-height:22px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+var KEY='nummem.v2';
+var S={letters:{0:'n',1:'l',2:'k',3:'m',4:'t',5:'v',6:'p',7:'s',8:'r',9:'jdh'},words:{"00": "nina", "01": "nael", "02": "nukk", "03": "Neymar", "04": "noot", "05": "invaliid", "06": "noep", "07": "James Bond", "08": "n66r", "09": "n6id", "10": "lina", "11": "Luule", "12": "luik", "13": "liim", "14": "latt", "15": "liiv", "16": "laip", "17": "Liis", "18": "Loora", "19": "lood", "20": "konn", "21": "kiil", "22": "kukk", "23": "kamm", "24": "kuut", "25": "kaev", "26": "kaup", "27": "kass", "28": "karu", "29": "kohvi", "30": "munn", "31": "mall", "32": "makk", "33": "muumia", "34": "mutt", "35": "maive", "36": "Madis Peterson", "37": "maasikas", "38": "muru", "39": "madu", "40": "Tiina", "41": "tuli", "42": "tukk", "43": "tamm (vee)", "44": "audi-tt", "45": "Tiivi", "46": "teip", "47": "tass", "48": "taara", "49": "tahvelarvuti", "50": "vann", "51": "viil", "52": "Vaiko", "53": "vaim", "54": "vaat", "55": "volskvagen", "56": "vaip", "57": "vesi", "58": "veri", "59": "voodi", "60": "pann", "61": "pall", "62": "pakk (puu)", "63": "piim", "64": "paat", "65": "Paavo Pesusieni", "66": "piip", "67": "pesa", "68": "poro", "69": "padi", "70": "seen", "71": "siil", "72": "sokk", "73": "sumo", "74": "sitt", "75": "savu", "76": "seep", "77": "Siim-Silver", "78": "saar", "79": "syda", "80": "Rauni", "81": "Raal", "82": "rakett", "83": "raamat", "84": "rott", "85": "orav", "86": "Arop", "87": "roos", "88": "Rahva Raamat", "89": "raha", "90": "jonn", "91": "juul", "92": "Jäku", "93": "Jyrgen Maasing", "94": "Jakob Talpsepp", "95": "jaava", "96": "jope", "97": "Jaus", "98": "juured", "99": "jo-jo"},st:{},dir:'mix',focus:'all'};
+try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);for(var k in p)S[k]=p[k];}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+var app=document.getElementById('app'),timer=null;
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function pad(n){return(n<10?'0':'')+n;}
+function lset(d){return(S.letters[d]||'').toLowerCase().replace(/[^\p{L}]/gu,'').split('');}
+function norm(s){return String(s).trim().toLowerCase();}
+function wkey(s){return norm(s).replace(/\(.*?\)/g,'').replace(/[\s\-]/g,'');}
+function digitsReady(){var a=[];for(var d=0;d<10;d++)if(lset(d).length)a.push(d);return a;}
+function rnd(a){return a[Math.floor(Math.random()*a.length)];}
+var MAXS=5,DAY=864e5;
+
+var MODES={
+ L:{name:'1. Letters',desc:'Single digit and its letter',dirs:['Digit to letter','Letter to digit'],
+    all:function(){var a=[];for(var d=0;d<10;d++)a.push(''+d);return a;},
+    items:function(){return digitsReady().map(String);},fast:[2000,2000]},
+ P:{name:'2. Pairs',desc:'Two digits and their letter pair',dirs:['Number to letters','Letters to number'],
+    all:function(){var a=[];for(var n=0;n<100;n++)a.push(pad(n));return a;},
+    items:function(){var r=digitsReady(),a=[];r.forEach(function(x){r.forEach(function(y){a.push(''+x+y);});});return a;},fast:[3500,3000]},
+ W:{name:'3. Words',desc:'Number and your word for it',dirs:['Number to word','Word to number'],
+    all:function(){var a=[];for(var n=0;n<100;n++)a.push(pad(n));return a;},
+    items:function(){return this.all().filter(function(k){return wkey(S.words[k]||'');});},fast:[6000,3500]}
+};
+
+/* ---------- per-card records ---------- */
+function key(m,item,rev){return m+':'+item+':'+(rev?'r':'f');}
+function peek(m,item,rev){return S.st[key(m,item,rev)];}
+function rec(m,item,rev){var k=key(m,item,rev);return S.st[k]||(S.st[k]={s:0,c:0,w:0,t:0,last:0});}
+function seen(r){return r&&(r.c+r.w)>0;}
+function isHard(r){return seen(r)&&(r.s<3||r.w/(r.c+r.w)>.3);}
+/* item strength for the map: null = never seen, else 0..5 (weaker direction dominates) */
+function strength(m,item){
+ var a=peek(m,item,false),b=peek(m,item,true);
+ if(!seen(a)&&!seen(b))return null;
+ if(seen(a)&&seen(b))return Math.min(a.s,b.s);
+ return Math.min((seen(a)?a:b).s,3);
+}
+function col(s){return 'hsl('+Math.round(s/MAXS*125)+',62%,'+(52+s*2)+'%)';}
+function counts(m){
+ var its=MODES[m].items(),o={solid:0,learn:0,hard:0,fresh:0,total:MODES[m].all().length*2};
+ its.forEach(function(i){[false,true].forEach(function(rev){
+  var r=peek(m,i,rev);
+  if(!seen(r))o.fresh++;else if(r.s>=4)o.solid++;else if(r.s<=1)o.hard++;else o.learn++;
+ });});
+ return o;
+}
+function cardLabel(m,item,rev){
+ if(m==='W')return rev?(S.words[item]||'?')+' > '+item:item+' > '+(S.words[item]||'?');
+ var L=item.split('').map(function(d){return(lset(d)[0]||'?').toUpperCase();}).join('');
+ return rev?L+' > '+item:item+' > '+L;
+}
+function hardest(m,n){
+ var out=[];MODES[m].items().forEach(function(i){[false,true].forEach(function(rev){
+  var r=peek(m,i,rev);if(!seen(r))return;var tot=r.c+r.w;
+  if(r.s>=4&&r.w/tot<.2)return;
+  out.push({item:i,rev:rev,s:r.s,err:r.w/tot,avg:r.t/tot});
+ });});
+ out.sort(function(a,b){return a.s-b.s||b.err-a.err||b.avg-a.avg;});
+ return out.slice(0,n);
+}
+function chipsHtml(m,n){
+ var h=hardest(m,n);if(!h.length)return '<p class="note">Nothing flagged yet.</p>';
+ return '<div class="chips">'+h.map(function(x){return '<span>'+esc(cardLabel(m,x.item,x.rev))+'<em>'+Math.round((1-x.err)*100)+'%</em><small>'+(x.avg/1000).toFixed(1)+'s</small></span>';}).join('')+'</div>';
+}
+function mapHtml(m){
+ var all=MODES[m].all();
+ return '<div class="map'+(m==='L'?' one':'')+'">'+all.map(function(i){
+  var s=strength(m,i);
+  return '<i data-i="'+i+'"'+(s===null?'':' class="seen" style="background:'+col(s)+'"')+'>'+i+'</i>';
+ }).join('')+'</div><div class="legend"><span><i style="background:'+col(0)+'"></i>hard</span><span><i style="background:'+col(2.5)+'"></i>learning</span><span><i style="background:'+col(5)+'"></i>solid</span><span><i style="background:var(--line)"></i>new</span></div>';
+}
+function detail(m,i){
+ var t=i;
+ if(m==='W')t+=' '+(S.words[i]||'(no word)');
+ else t+=' '+i.split('').map(function(d){return lset(d).join('/').toUpperCase()||'?';}).join(' ');
+ [false,true].forEach(function(rev,ix){
+  var r=peek(m,i,rev);t+=' | '+MODES[m].dirs[ix].toLowerCase()+': ';
+  if(!seen(r))t+='new';else{var n=r.c+r.w;t+=Math.round(r.c/n*100)+'% of '+n+', '+(r.t/n/1000).toFixed(1)+'s';}
+ });
+ return t;
+}
+
+/* ---------- HOME ---------- */
+function home(){
+ clearTimeout(timer);
+ var h='<div class="top"><h1>Number Memory</h1><button id="setup">Setup</button></div>';
+ ['L','P','W'].forEach(function(m){
+  var c=counts(m),M=MODES[m],T=c.total;
+  h+='<button class="mode" data-m="'+m+'"><b>'+M.name+'</b><span>'+M.desc+'<br>'+c.solid+' solid, '+c.learn+' learning, '+c.hard+' hard, '+(T-c.solid-c.learn-c.hard)+' new</span>'+
+   '<div class="bar"><i style="width:'+(100*c.solid/T)+'%;background:'+col(5)+'"></i><i style="width:'+(100*c.learn/T)+'%;background:'+col(2.5)+'"></i><i style="width:'+(100*c.hard/T)+'%;background:'+col(0)+'"></i></div></button>';
+ });
+ h+='<p class="note">Each number is tracked in both directions. Progress is saved in this browser; back it up in Setup.</p>';
+ app.innerHTML=h;
+ document.getElementById('setup').onclick=setup;
+ [].forEach.call(app.querySelectorAll('.mode'),function(b){b.onclick=function(){drill(b.dataset.m);};});
+}
+
+/* ---------- SETUP ---------- */
+function exportText(){
+ var out=[];for(var d=0;d<10;d++)out.push(d+' '+(S.letters[d]||''));
+ out.push('');for(var n=0;n<100;n++){var w=S.words[pad(n)];if(w)out.push(pad(n)+' '+w);}
+ return out.join('\n');
+}
+function importText(t){
+ var n=0;t.split(/\r?\n/).forEach(function(line){
+  var m=line.match(/^\s*(\d{1,2})\s*[:=\-,;\t ]\s*(.+?)\s*$/);if(!m)return;
+  if(m[1].length===1)S.letters[m[1]]=m[2];else S.words[m[1]]=m[2];n++;
+ });save();return n;
+}
+function setup(){
+ clearTimeout(timer);
+ var h='<div class="top"><h1>Setup</h1><button id="back" class="pri">Done</button></div>';
+ h+='<h2>Digit letters</h2><p class="note">One or more letters per digit, e.g. "n" or "jdh".</p><div class="lgrid">';
+ for(var d=0;d<10;d++)h+='<label>'+d+'<input data-d="'+d+'" value="'+esc(S.letters[d]||'')+'" autocapitalize="off" autocomplete="off"></label>';
+ h+='</div><h2>Words 00-99</h2><div class="wgrid">';
+ for(var n=0;n<100;n++){var k=pad(n);h+='<div><span>'+k+'</span><input data-w="'+k+'" value="'+esc(S.words[k]||'')+'" autocapitalize="off" autocomplete="off"></div>';}
+ h+='</div><h2>Bulk import / backup</h2><p class="note">One per line: "00 nina". Single digits set letters.</p>';
+ h+='<textarea id="bulk" rows="6" autocapitalize="off"></textarea><div class="row" style="margin-top:8px"><button id="imp">Import</button><button id="exp">Export</button><button id="rst">Reset progress</button></div><p class="note" id="msg"></p>';
+ app.innerHTML=h;window.scrollTo(0,0);
+ app.oninput=function(e){var t=e.target;if(t.dataset.d!==undefined){S.letters[t.dataset.d]=t.value;save();}else if(t.dataset.w){if(t.value.trim())S.words[t.dataset.w]=t.value.trim();else delete S.words[t.dataset.w];save();}};
+ document.getElementById('back').onclick=function(){app.oninput=null;home();};
+ var bulk=document.getElementById('bulk'),msg=document.getElementById('msg');
+ document.getElementById('exp').onclick=function(){bulk.value=exportText();bulk.select();msg.textContent='Copy the text to back up.';};
+ document.getElementById('imp').onclick=function(){var c=importText(bulk.value);app.oninput=null;setup();document.getElementById('msg').textContent=c+' lines imported.';};
+ document.getElementById('rst').onclick=function(){if(this.dataset.arm){S.st={};save();msg.textContent='Progress cleared.';delete this.dataset.arm;this.textContent='Reset progress';}else{this.dataset.arm=1;this.textContent='Tap again';}};
+}
+
+/* ---------- SCHEDULER ----------
+ Each card (item + direction) has strength 0..5.
+ fast correct: +1 | slow correct: stays (min 1) | wrong: -2 and comes back within 2-3 questions.
+ New cards are fed in only while fewer than 6 cards are still weak, so nothing piles up.
+ Otherwise cards are drawn by weight: weak ones often, solid ones rarely, with a boost
+ for solid cards not seen for days. */
+function makeDeck(m){
+ var cards=[];MODES[m].items().forEach(function(i){
+  if(S.dir!=='rev')cards.push({item:i,rev:false});
+  if(S.dir!=='fwd')cards.push({item:i,rev:true});
+ });
+ return cards;
+}
+function pickCard(m,ses){
+ var now=Date.now(),i;
+ for(i=0;i<ses.again.length;i++)if(ses.again[i].due<=ses.q){var a=ses.again.splice(i,1)[0];if(a.item!==ses.last)return a;ses.again.push({item:a.item,rev:a.rev,due:ses.q+1});break;}
+ var deck=makeDeck(m),hardOnly=false;
+ if(S.focus==='hard'){var hd=deck.filter(function(c){return isHard(peek(m,c.item,c.rev));});if(hd.length){deck=hd;hardOnly=true;}}
+ ses.hardEmpty=S.focus==='hard'&&!hardOnly;
+ var pool=deck.filter(function(c){return c.item!==ses.last;});if(!pool.length)pool=deck;
+ var fresh=[],old=[],weak=0;
+ pool.forEach(function(c){var r=peek(m,c.item,c.rev);if(!seen(r))fresh.push(c);else{old.push(c);if(r.s<3)weak++;}});
+ if(fresh.length&&(!old.length||(weak<6&&Math.random()<.6)))return rnd(fresh);
+ if(!old.length)return rnd(pool);
+ var tot=0,ws=old.map(function(c){
+  var r=peek(m,c.item,c.rev),gap=MAXS-r.s+.25,w=gap*gap;
+  var days=(now-(r.last||now))/DAY,iv=Math.pow(2,r.s)/4;
+  w*=1+Math.min(4,days/iv);
+  tot+=w;return w;});
+ var x=Math.random()*tot;
+ for(i=0;i<old.length;i++){x-=ws[i];if(x<=0)return old[i];}
+ return old[old.length-1];
+}
+
+/* ---------- DRILL ---------- */
+function drill(mode){
+ clearTimeout(timer);
+ var M=MODES[mode];
+ if(!M.items().length||(mode!=='W'&&digitsReady().length<2)){
+  app.innerHTML='<div class="top"><h1>'+M.name+'</h1><button id="b">Back</button></div><p>'+(mode==='W'?'No words yet. Add your words in Setup.':'Set letters for the digits in Setup first.')+'</p><button class="pri" id="s">Open Setup</button>';
+  document.getElementById('b').onclick=home;document.getElementById('s').onclick=setup;return;
+ }
+ var ses={q:0,n:0,c:0,streak:0,time:0,again:[],last:null},q=null,locked=false,t0=0;
+ app.innerHTML='<div class="top"><h1>'+M.name+'</h1><button id="b">Back</button></div>'+
+  '<div class="seg" id="sdir"><button data-v="mix">Mixed</button><button data-v="fwd">'+M.dirs[0]+'</button><button data-v="rev">'+M.dirs[1]+'</button></div>'+
+  '<div class="seg" id="sfoc"><button data-v="all">Smart mix</button><button data-v="hard">Hard only</button></div>'+
+  '<div class="prompt" id="pr"></div><div class="ask" id="ask"></div>'+
+  '<input id="ans" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">'+
+  '<div class="fb" id="fb"></div>'+
+  '<div class="row"><button id="show" style="flex:1">Show</button><button id="go" class="pri" style="flex:2">Check</button></div>'+
+  '<div class="stats"><div><b id="sc">0/0</b>correct</div><div><b id="ss">0</b>streak</div><div><b id="sa">-</b>avg sec</div></div>'+
+  '<h2>Hardest for you</h2><div id="hard"></div>'+
+  '<h2>Map</h2><div id="map"></div><p class="note" id="det">Tap a cell for details.</p>';
+ var pr=document.getElementById('pr'),ask=document.getElementById('ask'),ans=document.getElementById('ans'),fb=document.getElementById('fb'),go=document.getElementById('go');
+ function seg(id,prop){
+  var bs=document.getElementById(id).querySelectorAll('button');
+  function paint(){[].forEach.call(bs,function(b){b.className=b.dataset.v===S[prop]?'on':'';});}
+  [].forEach.call(bs,function(b){b.onclick=function(){S[prop]=b.dataset.v;save();paint();ses.again=[];next();};});
+  paint();
+ }
+ seg('sdir','dir');seg('sfoc','focus');
+ document.getElementById('b').onclick=home;
+ document.getElementById('map').onclick=function(e){var i=e.target.dataset&&e.target.dataset.i;if(i!==undefined)document.getElementById('det').textContent=detail(mode,i);};
+ function panels(){document.getElementById('hard').innerHTML=chipsHtml(mode,10);document.getElementById('map').innerHTML=mapHtml(mode);}
+
+ function next(){
+  clearTimeout(timer);locked=false;
+  var c=pickCard(mode,ses);ses.last=c.item;
+  var item=c.item,rev=c.rev,ds=item.split('');
+  q={item:item,rev:rev};pr.className='prompt';
+  if(mode==='W'){
+   if(rev){pr.textContent=S.words[item];pr.className='prompt word';ask.textContent='Which number?';q.kind='num';q.len=2;q.show=item;}
+   else{pr.textContent=item;ask.textContent='Which word?';q.kind='word';q.show=S.words[item];}
+  }else if(rev){
+   q.shown=ds.map(function(d){return rnd(lset(d));});pr.textContent=q.shown.join(' ').toUpperCase();
+   ask.textContent=mode==='L'?'Which digit?':'Which number?';q.kind='num';q.len=ds.length;q.show=item;
+  }else{
+   pr.textContent=item;ask.textContent=mode==='L'?'Which letter?':'Which letters?';q.kind='let';q.len=ds.length;
+   q.show=ds.map(function(d){return lset(d).join('/');}).join(' ').toUpperCase();
+  }
+  q.fast=M.fast[rev?1:0];
+  ans.value='';ans.className='';ans.inputMode=q.kind==='num'?'numeric':'text';
+  fb.textContent=ses.hardEmpty?'Nothing hard right now, showing the smart mix.':'';
+  go.textContent='Check';ans.focus();t0=Date.now();
+ }
+ function isRight(v){
+  v=norm(v);var i;
+  if(q.kind==='word')return wkey(v)===wkey(S.words[q.item]);
+  if(q.kind==='num'){
+   if(v===q.item)return true;
+   if(q.shown&&v.length===q.len&&/^\d+$/.test(v)){for(i=0;i<q.len;i++)if(lset(v[i]).indexOf(q.shown[i])<0)return false;return true;}
+   return false;
+  }
+  var ch=v.replace(/\s/g,'').split(''),ds=q.item.split('');if(ch.length!==q.len)return false;
+  for(i=0;i<ds.length;i++)if(lset(ds[i]).indexOf(ch[i])<0)return false;
+  return true;
+ }
+ function grade(ok){
+  if(locked)return;locked=true;
+  var raw=Date.now()-t0,dt=Math.min(raw,15000),r=rec(mode,q.item,q.rev),slow=raw>q.fast;
+  if(ok){r.c++;r.s=slow?Math.max(r.s,1):Math.min(MAXS,r.s+1);}
+  else{r.w++;r.s=Math.max(0,r.s-2);ses.again.push({item:q.item,rev:q.rev,due:ses.q+2+Math.floor(Math.random()*2)});}
+  r.t+=dt;r.last=Date.now();save();
+  ses.q++;ses.n++;ses.time+=dt;if(ok){ses.c++;ses.streak++;}else ses.streak=0;
+  document.getElementById('sc').textContent=ses.c+'/'+ses.n;
+  document.getElementById('ss').textContent=ses.streak;
+  document.getElementById('sa').textContent=(ses.time/ses.n/1000).toFixed(1);
+  ans.className=ok?'ok':'bad';panels();
+  if(ok){fb.textContent=slow?'Correct, but slow ('+(raw/1000).toFixed(1)+'s). It stays in rotation.':'';timer=setTimeout(next,slow?900:350);}
+  else{fb.innerHTML='<b>'+esc(q.show)+'</b>';go.textContent='Next';timer=setTimeout(next,2500);}
+ }
+ function submit(){if(locked){next();return;}if(!ans.value.trim())return;grade(isRight(ans.value));}
+ ans.oninput=function(){
+  if(locked){ans.value='';return;}
+  if(q.kind==='word')return;
+  var v=ans.value.replace(/\s/g,'');
+  if(v.length>=q.len)grade(isRight(v));
+ };
+ ans.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();submit();}};
+ go.onclick=submit;
+ document.getElementById('show').onclick=function(){if(!locked)grade(false);};
+ panels();next();
+}
+home();
+})();
+</script>
+</body>
+</html>
